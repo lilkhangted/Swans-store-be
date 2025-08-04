@@ -38,8 +38,11 @@ async function connectToDatabase() {
 
 connectToDatabase().catch(console.dir);
 
-// Middleware để parse JSON
 
+//wake up render
+app.get('/api/ping', (req, res) => {
+  res.send('pong');
+});
 
 // API để lấy tất cả sản phẩm
 app.get('/api/products', async (req, res) => {
