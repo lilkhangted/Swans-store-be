@@ -10,7 +10,10 @@ const port = process.env.PORT;
 const uri = process.env.MONGODB_URI;
 let db;
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://swanstore.vercel.app/',
+  credentials: true
+}));
 app.use(express.json());
 const client = new MongoClient(uri, {
   serverApi: {
