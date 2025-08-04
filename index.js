@@ -11,9 +11,13 @@ const uri = process.env.MONGODB_URI;
 let db;
 
 app.use(cors({
-  origin: 'https://swanstore.vercel.app/',
+  origin: 'https://swanstore.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
   credentials: true
 }));
+
+
 app.use(express.json());
 const client = new MongoClient(uri, {
   serverApi: {
