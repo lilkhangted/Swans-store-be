@@ -14,11 +14,12 @@ let db;
 
 app.use(cors({
   origin: (origin, callback) => {
-    const allowedOrigins = [
-      'https://swanstore.vercel.app',
-      'http://localhost:3000'
-    ];
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) return callback(null, true); // cho request từ server
+    if (
+      origin === 'http://localhost:3000' ||
+      origin === 'https://swanstore.vercel.app' ||
+      /\.vercel\.app$/.test(origin)
+    ) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -29,8 +30,8 @@ app.use(cors({
   credentials: true
 }));
 
-// xử lý preflight request
 app.options('*', cors());
+
 
 app.use(express.json());
 
