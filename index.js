@@ -13,25 +13,11 @@ const uri = process.env.MONGODB_URI;
 let db;
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // cho request từ server
-    if (
-      origin === 'http://localhost:3000' ||
-      origin === 'https://swanstore.vercel.app' ||
-      /\.vercel\.app$/.test(origin)
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['https://swanstore.vercel.app', 'http://localhost:3000', /\.vercel\.app$/ ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
-
-app.options('*', cors());
-
 
 app.use(express.json());
 
@@ -121,6 +107,8 @@ connectToDatabase()
           paddingLength = user.id.slice(1).length;
         }
       }
+
+
       return "U" + expected.toString().padStart(paddingLength, "0");
     }
 
