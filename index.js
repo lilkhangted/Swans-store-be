@@ -13,11 +13,24 @@ const uri = process.env.MONGODB_URI;
 let db;
 
 app.use(cors({
-  origin: ['https://swanstore.vercel.app', 'http://localhost:3000', /\.vercel\.app$/ ],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://swanstore.vercel.app',
+      'http://localhost:3000'
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// xử lý preflight request
+app.options('*', cors());
 
 app.use(express.json());
 
