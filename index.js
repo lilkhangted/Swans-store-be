@@ -168,9 +168,24 @@ connectToDatabase()
         const products = await collection.find({}).toArray();
         res.json(products);
       } catch (err) {
-        res.status(500).json({ message: 'Error fetching products: ' + err.message }); // Sử dụng JSON thay vì send
+        res.status(500).json({ message: 'Error fetching products: ' + err.message });
       }
     });
+    
+    app.get('/api/products/:id', async (req, res) => {
+    try {
+      const collection = db.collection('products');
+      const product = await collection.findOne({ id: req.params.id });
+
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      res.json(product);
+    } catch (err) {
+      res.status(500).json({ message: 'Error fetching product: ' + err.message });
+    }
+  });
 
     // API để thêm sản phẩm mới
     app.post('/api/products', async (req, res) => {
@@ -180,11 +195,10 @@ connectToDatabase()
         const result = await collection.insertOne(newProduct);
         res.status(201).json(result);
       } catch (err) {
-        res.status(500).json({ message: 'Error adding product: ' + err.message }); // Sử dụng JSON
+        res.status(500).json({ message: 'Error adding product: ' + err.message });
       }
     });
 
-    // Khởi động server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
     });
@@ -194,7 +208,6 @@ connectToDatabase()
     process.exit(1);
   });
 
-// Đóng kết nối khi process kết thúc
 process.on('SIGINT', async () => {
   await client.close();
   console.log("Connection closed.");
