@@ -1,71 +1,44 @@
-require('dotenv').config();
-const { MongoClient } = require('mongodb');
-const bcrypt = require('bcrypt');
+import Cart from '../Model/cart.js';
 
-const uri = process.env.MONGODB_URI;
+async function generateCartId() {
+  const lastCart = await Cart.findOne().sort({ createdAt: -1 });
+  if (!lastCart || !lastCart.id) return "CT00001";
 
-async function run() {
-  const client = new MongoClient(uri);
+  const lastNumber = parseInt(lastCart.id.slice(2)); // lấy phần số
+  const newNumber = lastNumber + 1;
+  return "CT" + newNumber.toString().padStart(5, "0");
+}
+
+exports.addToCart = async (req, res) => {
+  const { userId, productId, quantity } = req.body;
 
   try {
-    await client.connect();
-    const db = client.db("database");
-    const usersCollection = db.collection("users");
-    const newUsers = [
-      {
-        id: "U000003",
-        name: "Nguyen Van B",
-        email: "user1@example.com",
-        password: "123456",   // sẽ hash ở dưới
-        role: "user",
-        phone: "0901123456",
-        address: {
-          street: "123 Lê Lợi",
-          city: "Hồ Chí Minh",
-          district: "Quận 1",
-          country: "VN",
-          postalCode: "700000"
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: "U000004",
-        name: "Tran Thi C",
-        email: "admin1@example.com",
-        password: "admin123",
-        role: "admin",
-        phone: "0912345678",
-        address: {
-          street: "456 Hai Bà Trưng",
-          city: "Hà Nội",
-          district: "Hoàn Kiếm",
-          country: "VN",
-          postalCode: "100000"
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
+    let cart = await Cart.findOne({ userId });
 
-    for (let newUser of newUsers) {
-      const exists = await usersCollection.findOne({ email: newUser.email });
-      if (!exists) {
-        const hashedPassword = await bcrypt.hash(newUser.password, 10);
-        newUser.password = hashedPassword;
-
-        await usersCollection.insertOne(newUser);
-        console.log(`✔ Inserted new user: ${newUser.email}`);
+    if (!cart) {
+      // tạo mới
+      const newId = await generateCartId();
+      cart = new Cart({
+        id: newId,
+        userId,
+        items: [{ productId, quantity }],
+        updatedAt: new Date()
+      });
+    } else {
+      // cập nhật giỏ cũ
+      const item = cart.items.find(i => i.productId === productId);
+      if (item) {
+        item.quantity += quantity;
       } else {
-        console.log(`ℹ User already exists: ${newUser.email}`);
+        cart.items.push({ productId, quantity });
       }
+      cart.updatedAt = new Date();
     }
 
-    console.log("✅ Seeding completed!");
+    await cart.save();
+    res.status(200).json(cart);
   } catch (err) {
-    console.error("❌ Error in seed:", err);
-  } finally {
-    await client.close();
+    console.error(err);
+    res.status(500).json({ message: "Lỗi server" });
   }
-}
-run();
+};
